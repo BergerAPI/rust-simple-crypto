@@ -5,3 +5,4 @@ edition = "2018"
 
 [dependencies]
 clap = "~2.27.0"
+rand = "~0.8.4"

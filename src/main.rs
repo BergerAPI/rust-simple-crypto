@@ -1,8 +1,11 @@
-extern crate clap;
 use clap::{App, Arg};
 use std::process;
 
+use rand::distributions::Alphanumeric;
+use rand::Rng;
+
 fn main() {
+    let random = rand::thread_rng();
     let matches = App::new("cryptography")
         .version("1.0")
         .author("bergerapi")
@@ -21,8 +24,21 @@ fn main() {
         .arg(Arg::with_name("key").short("k").takes_value(true))
         .get_matches();
 
-    let text = matches.value_of("text").unwrap();
-    let key = matches.value_of("key").unwrap();
+    let text: String = String::from(matches.value_of("text").unwrap());
+
+    // Key could be None
+    let unwrapped_key = matches.value_of("key");
+    let key;
+
+    if unwrapped_key != None {
+        key = String::from(unwrapped_key.unwrap());
+    } else {
+        key = random
+            .sample_iter(&Alphanumeric)
+            .take(30)
+            .map(char::from)
+            .collect();
+    }
 
     let value = match matches.value_of("method").unwrap() {
         "encrypt" => encrypt(text, key),
@@ -39,13 +55,13 @@ fn main() {
 /**
  * Encrypting a String with the key
  */
-fn encrypt<'a>(text: &'a str, key: &'a str) -> String {
+fn encrypt(text: String, key: String) -> String {
     return format!("encrypting {}, {}", text, key);
 }
 
 /**
  * Decrypting a String with the key
  */
-fn decrypt<'a>(text: &'a str, key: &'a str) -> String {
+fn decrypt(text: String, key: String) -> String {
     return format!("decrypting {}, {}", text, key);
 }
