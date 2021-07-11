@@ -33,6 +33,7 @@ fn main() {
     if unwrapped_key != None {
         key = String::from(unwrapped_key.unwrap());
     } else {
+        // Generating a pseudo random 30 characters long string
         key = random
             .sample_iter(&Alphanumeric)
             .take(30)
@@ -56,7 +57,12 @@ fn main() {
  * Encrypting a String with the key
  */
 fn encrypt(text: String, key: String) -> String {
-    return format!("encrypting {}, {}", text, key);
+    let new_lenght = (text.len() as f64 * (key.len() as f64).sqrt()).floor();
+
+    return format!(
+        "encrypting {}, {} with a new size of {}",
+        text, key, new_lenght
+    );
 }
 
 /**
