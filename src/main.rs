@@ -4,6 +4,9 @@ use std::process;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 
+const ALPHABET: &str =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 :_;.,!§$%&/()=";
+
 fn main() {
     let matches = App::new("cryptography")
         .version("1.0")
@@ -29,7 +32,7 @@ fn main() {
     let unwrapped_key = matches.value_of("key");
 
     let value = match matches.value_of("method").unwrap() {
-        "encrypt" => encrypt(text, get_random_string(30)),
+        "encrypt" => encrypt(text),
         "decrypt" => decrypt(text, String::from(unwrapped_key.unwrap())),
         _ => {
             println!("Thats not a valid method stupido");
@@ -51,8 +54,8 @@ fn get_random_string(length: usize) -> String {
         .collect()
 }
 
-fn find_index(string: &str, val: &str, index: i64) -> usize {
-    string
+fn find_index(val: &str, index: i64) -> usize {
+    ALPHABET
         .find(val.chars().nth(index as usize).unwrap())
         .unwrap()
 }
@@ -60,25 +63,19 @@ fn find_index(string: &str, val: &str, index: i64) -> usize {
 /**
  * Encrypting a String with the key
  */
-fn encrypt(text: String, key: String) -> String {
+fn encrypt(text: String) -> String {
     let mut encrypted_string = String::from("");
-
-    // A-Z, a-z
-    let alphabet: String = (b'A'..=b'z')
-        .map(|c| c as char)
-        .filter(|c| c.is_alphabetic())
-        .collect::<String>();
+    let key = get_random_string(text.len());
 
     // Iterating and appending the key n-value and the text n-value together
     for i in 0..(text.len() as i64) {
-        let cur_result = find_index(&alphabet, &text, i) << find_index(&key, &key, i);
+        let cur_result = find_index(&text, i) + find_index(&key, i);
 
-        encrypted_string += &format!("{}", cur_result);
+        encrypted_string += &format!("{}x", cur_result);
     }
 
     // Applying some random numbers to confuse the hackers
-    for _ in 0..((text.len() as f64 * (key.len() as f64).sqrt()).floor() as i64 - text.len() as i64)
-    {
+    for _ in 0..(key.len()) {
         encrypted_string += &format!("{}", rand::thread_rng().gen_range(0..10))
     }
 
@@ -89,10 +86,31 @@ fn encrypt(text: String, key: String) -> String {
  * Decrypting a String with the key
  */
 fn decrypt(text: String, key: String) -> String {
-    let real_lenght = (text.len() as f64 / (key.len() as f64).sqrt()).floor();
+    let mut encrypted_string = String::from("");
 
-    return format!(
-        "decrypting {}, {} with a size of {}",
-        text, key, real_lenght
-    );
+    let mut index = 0;
+
+    for elem in text.split("x") {
+        if elem == "" || elem.len() == key.len() {
+            continue;
+        }
+
+        let number = String::from(elem)
+            .parse::<usize>()
+            .unwrap()
+            .wrapping_sub(find_index(&key, index));
+
+        println!(
+            "array-len: {}, {} - {} - {}",
+            ALPHABET.len(),
+            number,
+            find_index(&key, index),
+            elem
+        );
+        encrypted_string += &format!("{}", ALPHABET.chars().nth(number).unwrap());
+
+        index += 1;
+    }
+
+    return encrypted_string;
 }
